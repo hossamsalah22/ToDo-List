@@ -1,53 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet, TextInput, Button, Text } from 'react-native';
-import ToDos from './todos';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import { View, StyleSheet } from "react-native";
+import ToDos from "./todos";
 import Divider from "./divider";
 import Filter from "./filter";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AddTodoForm from "./addTodoForm";
+import { useSelector, useDispatch } from "react-redux";
+import { changeStatus } from "../src/features/todosSlice";
 
 export function home(navigation) {
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [error, setError] = useState("");
-    const [todos, setTodos] = useState([]);
     const [filteredTodos, setFilteredTodos] = useState([]);
-
+    const todos = useSelector((state) => state.todos.value);
+    const dispatch = useDispatch();
     const handleTodoSelect = (index, todo, isSelected) => {
+        return dispatch(changeStatus(todo.title));
         const updatedItem = [...todos];
         updatedItem[index].status = isSelected;
-        setTodos(updatedItem);
         setFilteredTodos(updatedItem);
     };
 
-    const save = () => {
-        setError("");
-        if (!title.length) {
-            setError("title can't Be Empty.");
-            return;
-        }
-        if (!description.length) {
-            setError("Description can't Be Empty.");
-            return;
-        }
-        if (todos.filter((el) => el.title == title).length) {
-            setDescription("");
-            setTitle("");
-            setError("duplicated todo.");
-            return;
-        }
-        const newTodos = { title, description, status: false };
-        setTodos([...todos, newTodos]);
-        setTitle("");
-        setDescription("");
-    }
-
     const readData = async () => {
         try {
-            const value = await AsyncStorage.getItem('todos');
-            console.log(value)
+            const value = await AsyncStorage.getItem("todos");
             if (value) {
-                setTodos(JSON.parse(value));
                 setFilteredTodos(JSON.parse(value));
             }
         } catch (error) {
@@ -57,9 +33,8 @@ export function home(navigation) {
 
     const saveData = async () => {
         try {
-            await AsyncStorage.setItem('todos', JSON.stringify(todos))
+            await AsyncStorage.setItem("todos", JSON.stringify(todos));
             setFilteredTodos(todos);
-
         } catch (error) {
             console.log(error);
         }
@@ -67,38 +42,14 @@ export function home(navigation) {
 
     useEffect(() => {
         readData();
-    }, [])
+    }, []);
     useEffect(() => {
         saveData();
     }, [todos]);
 
-
     return (
         <View style={styles.container}>
-            <TextInput
-                style={styles.input}
-                onChangeText={setTitle}
-                value={title}
-                placeholder="Enter the Title"
-                keyboardType="numeric"
-            />
-
-            <TextInput
-                style={styles.input}
-                onChangeText={setDescription}
-                value={description}
-                placeholder="Enter the Description"
-                keyboardType="numeric"
-            />
-            <Text
-                style={{ color: "red", textAlign: "center", marginBottom: 3 }}
-                View={error.length}>
-                {error}
-            </Text>
-            <Button
-                title="Save"
-                onPress={save}
-            />
+            <AddTodoForm />
             <Divider />
             <View>
                 <Filter todos={todos} setFilteredTodos={setFilteredTodos}></Filter>
@@ -106,7 +57,11 @@ export function home(navigation) {
             <Divider />
 
             <View>
-                <ToDos todos={filteredTodos} navigation={navigation.navigation} handleTodoSelect={handleTodoSelect} setTodos={setTodos}></ToDos>
+                <ToDos
+                    todos={filteredTodos}
+                    navigation={navigation.navigation}
+                    handleTodoSelect={handleTodoSelect}
+                    setTodos={() => {}}></ToDos>
             </View>
             <StatusBar style="auto" />
         </View>

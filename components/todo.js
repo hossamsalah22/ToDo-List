@@ -3,6 +3,8 @@ import { View, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Text, TouchableRipple } from "react-native-paper";
 import { Icon, Button } from "react-native-elements";
 import {CheckBox} from "react-native-web";
+import { useDispatch } from "react-redux";
+import { deleteTodo } from "../src/features/todosSlice";
 
 export default function todo({ index, todos, todo, onSelect, navigation, setTodos }) {
 
@@ -11,11 +13,12 @@ export default function todo({ index, todos, todo, onSelect, navigation, setTodo
     const handleSelectChange = (value) => {
         onSelect(index, todo, value);
     };
-
+    const dispatch = useDispatch();
     const handleDeleteTodo = () => {
+        setShowModal(false);
+        return dispatch(deleteTodo(todo.title));
         const newTodoList = [...todos];
         newTodoList.splice(index, 1);
-        setShowModal(false);
         setTodos(newTodoList);
     };
 
